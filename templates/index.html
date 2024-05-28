@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection</title>
+    <style>
+        body{
+            /* background-image: url('images/bg3.jpeg'); */
+            background: hsla(213, 62%, 45%, 1);
+
+background: linear-gradient(90deg, hsla(213, 62%, 45%, 1) 0%, hsla(203, 89%, 71%, 1) 50%, hsla(0, 0%, 96%, 1) 100%);
+
+
+filter: progid: DXImageTransform.Microsoft.gradient( startColorstr="#2C6CBC", endColorstr="#71C3F7", GradientType=1 );
+        }
+        .container {
+            text-align: center;
+            margin-top: 50px;
+        }
+        h1{
+  font-family: monospace;
+  font-size: 3em;
+  animation: color-change 1s infinite;
+
+}
+
+@keyframes color-change {
+  0% { color: red; }
+  25%{color: green;}
+  50% { color: blue; }
+  75% {color: yellow}
+  100% { color: red; }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="" alt="">
+        <h1>Facial Emotion Detection</h1>
+        <button onclick="startLiveCam()">Use Live Camera</button>
+        <br><br>
+        <input type="file" accept="image/*" id="fileInput">
+        <!-- Add an ID to this button -->
+        <button id="processButton">Upload Image</button>
+        <br><br>
+        <!-- Placeholder for the result image -->
+        <img id="resultImage" src="static/images/bg333.jpg" alt="static/images/bg333.jpg" style="width: 50%; height: 50%;">
+    </div>
+
+    <script>
+        function startLiveCam() {
+            // Logic to handle live camera redirection
+            var resultImage = document.getElementById('resultImage');
+            resultImage.src = "{{ url_for('video_feed') }}";
+          //  window.location.href = "/live_cam";
+        }
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            // Define processImage within the DOMContentLoaded callback
+            function processImage() {
+                var fileInput = document.getElementById('fileInput');
+                var file = fileInput.files[0];
+
+                if (file) {
+                    var formData = new FormData();
+                    formData.append('image', file);
+
+                    fetch('/process_image', {
+                        method: 'POST',
+                        body: formData,
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('Server responded with an error!');
+                        }
+                    })
+                    .then(data => {
+                        if(data.image) {
+                            var resultImage = document.getElementById('resultImage');
+                            resultImage.src = 'data:image/jpeg;base64,' + data.image;
+                        } else if(data.error) {
+                            alert(data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while processing the image.');
+                    });
+                } else {
+                    alert('Please select an image file.');
+                }
+            }
+
+            // Attach the processImage function to the button's onclick event programmatically
+            var processButton = document.getElementById('processButton');
+            if(processButton) {
+                processButton.addEventListener('click', processImage);
+            } else {
+                console.error("Element with id 'processButton' not found.");
+            }
+        });
+    </script>
+</body>
+</html>
